@@ -1,4 +1,5 @@
 const multer = require('multer');
+const AppError = require('./appError');
 
 {
   // Almacenar la información en un disco (en el servidor)
@@ -30,6 +31,20 @@ const storage = multer.memoryStorage();
   Dentro del objeto podremos colocar disitintas configuraciones que encontraremos en
   la documentación. Por ejemplo, fileFilter sirve para filtrar archivos permitidos (pdf, imagenes, etc)
 */
-const upload = multer({ storage });
+
+// Función para filtar los tipos de archivos aceptados
+function fileFilter(req, file, cb) {
+  console.log(req);
+  const allowedFiles = ['jpg', 'png'];
+  const fileExtension = file.originalname.split('.').slice(-1)[0];
+  if (allowedFiles.includes(fileExtension)) return cb(null, true);
+  const errMessage = 'Incorrect file extensión. Please, only use jpg or png';
+  cb(new AppError(errMessage, 415));
+}
+
+const upload = multer({
+  storage,
+  fileFilter,
+});
 
 module.exports = { upload };
