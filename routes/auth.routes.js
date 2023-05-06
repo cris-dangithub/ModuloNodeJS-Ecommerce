@@ -6,7 +6,7 @@ const {
   renewToken,
 } = require('../controllers/auth.controllers');
 const { protect } = require('../middlewares/auth.middlewares');
-const { validIfExistUserEmail } = require('../middlewares/user.middlewares');
+const { validIfExistUserEmail, validateImgName } = require('../middlewares/user.middlewares');
 const { validateFields } = require('../middlewares/validateField.middlewares');
 const { upload } = require('../utils/multer');
 
@@ -23,6 +23,7 @@ router.post(
     check('role', 'The role must be mandatory').not().isEmpty(),
     validateFields,
     validIfExistUserEmail,
+    validateImgName
   ],
   createUser
 );

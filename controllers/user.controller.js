@@ -7,22 +7,39 @@ const Cart = require('../models/cart.model');
 const ProductInCart = require('../models/productInCart.model');
 const { appSuccess } = require('../utils/appSuccess');
 const Product = require('../models/product.model');
+const { getDownloadURL, ref } = require('firebase/storage');
+const { storage } = require('../utils/firebase');
+const { mapAsync } = require('../utils/mapAsync');
 
 exports.getAllUsers = catchAsync(async (req, res, next) => {
+  // 1. Traernos nos usuarios donde el status sea verdadero
   const users = await User.findAll({
     where: {
       status: true,
     },
   });
-  res.status(200).json({
-    status: 'success',
-    message: 'ROUTE - GET',
-    users,
+  // 2. Usar mapAsync para obtener las url de las imagenes de perfil de usuario
+  const usersResolved = await mapAsync(users, async user => {
+    if (user.profileImageUrl) {
+      const imgRef = ref(storage, user.profileImageUrl);
+      url = await getDownloadURL(imgRef);
+      user.profileImageUrl = url;
+    }
+    return user;
   });
+
+  // 3. Mandar respuesta al cliente
+  appSuccess(res, 200, 'Users obtained successfully', { users: usersResolved });
 });
 
 exports.getUserById = catchAsync(async (req, res, next) => {
   const { user } = req;
+  // Si el usuario tiene un path de firebase, cambiarla por la url de la imagen
+  if (user.profileImageUrl) {
+    const imgRef = ref(storage, user.profileImageUrl);
+    const url = await getDownloadURL(imgRef);
+    user.profileImageUrl = url;
+  }
   res.status(200).json({
     status: 'success',
     message: 'ROUTE - GET BY ID',

@@ -44,3 +44,13 @@ exports.validIfExistUserEmail = async (req, res, next) => {
 
   next();
 };
+
+exports.validateImgName = catchAsync(async (req, res, next) => {
+  const nameFile = req.file.originalname;
+  // Si el archivo tiene espacios, cambiar los espacios del originalname por guiones bajos
+  if (nameFile.split(' ').length > 1) {
+    req.file.originalname = nameFile.replace(/\s+/g, '_');
+  }
+
+  next();
+});

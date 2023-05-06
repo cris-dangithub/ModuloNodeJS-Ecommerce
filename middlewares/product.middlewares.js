@@ -26,7 +26,6 @@ const getQuantity = req => {
 };
 
 exports.validProductById = catchAsync(async (req, res, next) => {
-
   const id = getProduct(req);
   const product = await Product.findOne({
     where: {

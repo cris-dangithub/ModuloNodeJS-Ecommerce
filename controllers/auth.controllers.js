@@ -21,9 +21,17 @@ exports.createUser = catchAsync(async (req, res, next) => {
 
   */
   const imgRef = ref(storage, `user/${Date.now()}-${req.file.originalname}`);
+  // Subimos la imagen a Firebase mediante uploadByes
   const imgUploaded = await uploadBytes(imgRef, req.file.buffer);
+
   // 1. Crear instancia de la clase User con la información que viene por el body
-  const user = new User({ username, email, password, role });
+  const user = new User({
+    username,
+    email,
+    password,
+    role,
+    profileImageUrl: `${imgUploaded.metadata.fullPath}`,
+  });
 
   // 2.1 Encriptacion de la contraseña. Primero generaremos los saltos
   /*
@@ -68,6 +76,7 @@ exports.createUser = catchAsync(async (req, res, next) => {
       username: user.username,
       email: user.email,
       role: user.role,
+      profileImageUrl: user.profileImageUrl,
     },
   });
 });
