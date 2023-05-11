@@ -5,9 +5,9 @@ const {
   getUserById,
   updateUser,
   deleteUser,
-  updatePassword,
   getOrders,
   getOrderById,
+  updatePassword,
 } = require('../controllers/user.controller');
 const {
   protectAccountOwner,
@@ -15,6 +15,10 @@ const {
 } = require('../middlewares/auth.middlewares');
 const { validUserById } = require('../middlewares/user.middlewares');
 const { validateFields } = require('../middlewares/validateField.middlewares');
+const {
+  updatePasswordValidation,
+  updateUserValidation,
+} = require('../middlewares/validations.middleware');
 
 const router = Router();
 
@@ -34,21 +38,21 @@ router.use(protect);
 router.get('/orders/:id', getOrderById);
 router.patch(
   '/password/:id',
-  [
-    check('currentPassword', 'The current password must be a correct format')
-      .not()
-      .isEmpty(),
-    check('newPassword', 'The new password must be a correct format')
-      .not()
-      .isEmpty(),
-    validateFields,
-    // Acá usamos el middleware de validacion de usuario por id
-    validUserById,
-    protectAccountOwner,
-  ],
+  updatePasswordValidation,
+  validateFields,
+  // Acá usamos el middleware de validacion de usuario por id
+  validUserById,
+  protectAccountOwner,
   updatePassword
 );
-router.patch('/:id', validUserById, updateUser);
+router.patch(
+  '/:id',
+  updateUserValidation,
+  validateFields,
+  validUserById,
+  protectAccountOwner,
+  updateUser
+);
 router.delete('/:id', validUserById, deleteUser);
 
 module.exports = {

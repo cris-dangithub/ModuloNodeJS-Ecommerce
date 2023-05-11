@@ -6,12 +6,12 @@ const {
   updateCategory,
   deleteCategory,
 } = require('../controllers/category.controller');
-const {
-  protect,
-  restrictTo,
-  protectAccountOwner,
-} = require('../middlewares/auth.middlewares');
+const { protect, restrictTo } = require('../middlewares/auth.middlewares');
 const { validCategoryById } = require('../middlewares/category.middlewares');
+const {
+  createCategoryValidation,
+} = require('../middlewares/validations.middleware');
+const { validateFields } = require('../middlewares/validateField.middlewares');
 
 const router = Router();
 
@@ -24,8 +24,20 @@ router.get('/:id', validCategoryById, findCategory);
 // ------------ Rutas protegidas por token ------------
 // Al usar "router.use", las demas rutas de abajo quedarán protegidas
 router.use(protect);
-router.post('/', restrictTo('admin'), createCategory);
-router.patch('/:id', restrictTo('admin'), validCategoryById, updateCategory);
+router.post(
+  '/',
+  restrictTo('admin'),
+  createCategoryValidation,
+  validateFields,
+  createCategory
+);
+router.patch(
+  '/:id',
+  restrictTo('admin'),
+  createCategoryValidation,
+  validCategoryById,
+  updateCategory
+);
 router.delete('/:id', restrictTo('admin'), validCategoryById, deleteCategory);
 
 module.exports = {

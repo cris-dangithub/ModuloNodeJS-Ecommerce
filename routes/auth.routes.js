@@ -6,39 +6,30 @@ const {
   renewToken,
 } = require('../controllers/auth.controllers');
 const { protect } = require('../middlewares/auth.middlewares');
-const { validIfExistUserEmail, validateImgName } = require('../middlewares/user.middlewares');
+const {
+  validIfExistUserEmail,
+  validateImgName,
+} = require('../middlewares/user.middlewares');
 const { validateFields } = require('../middlewares/validateField.middlewares');
 const { upload } = require('../utils/multer');
+const {
+  createUserValidation,
+  loginValidation,
+} = require('../middlewares/validations.middleware');
 
 const router = Router();
 
 router.post(
   '/signup',
-  [
-    upload.single('profileImageUrl'), // Colocaremos el nombre de como recibiremos el archivo dentro de las comillas.
-    check('username', 'The username must be mandatory').not().isEmpty(),
-    check('email', 'The email must be mandatory').not().isEmpty(),
-    check('email', 'The email must be a correct format').isEmail(),
-    check('password', 'The password must be a correct format').not().isEmail(),
-    check('role', 'The role must be mandatory').not().isEmpty(),
-    validateFields,
-    validIfExistUserEmail,
-    validateImgName
-  ],
+  upload.single('profileImageUrl'), // Colocaremos el nombre de como recibiremos el archivo dentro de las comillas.
+  createUserValidation,
+  validateFields,
+  validIfExistUserEmail,
+  validateImgName,
   createUser
 );
 
-router.post(
-  '/login',
-  [
-    check('email', 'The email must be mandatory').not().isEmpty(),
-    check('email', 'The email must be a correct format').isEmail(),
-    check('password', 'The password must be mandatory').not().isEmpty(),
-    check('password', 'The password must be a correct format').not().isEmail(),
-    validateFields,
-  ],
-  login
-);
+router.post('/login', loginValidation, validateFields, login);
 
 // ------------ Rutas protegidas ------------
 router.use(protect);

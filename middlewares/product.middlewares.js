@@ -1,6 +1,10 @@
+const { getDownloadURL, ref } = require('firebase/storage');
 const Product = require('../models/product.model');
+const ProductImgs = require('../models/productImgs.model');
 const AppError = require('../utils/appError');
 const { catchAsync } = require('../utils/catchAsync');
+const { mapAsync } = require('../utils/mapAsync');
+const { storage } = require('../utils/firebase');
 
 const getProduct = req => {
   // Obtener id del producto por los parametros
@@ -32,7 +36,22 @@ exports.validProductById = catchAsync(async (req, res, next) => {
       id,
       status: true,
     },
+    include: {
+      model: ProductImgs,
+      where: { status: true },
+      required: false,
+      attributes: { exclude: ['createdAt', 'updatedAt'] },
+    },
   });
+
+  // Cambiaremos la dirección de imagen a la de la URL
+  await mapAsync(product.productImgs, async productImg => {
+    const refImg = ref(storage, productImg.imgUrl);
+    const url = await getDownloadURL(refImg);
+    productImg.imgUrl = url;
+    return productImg;
+  });
+
   if (!product) {
     return next(new AppError('The product was not found', 404));
   }

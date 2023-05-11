@@ -1,23 +1,35 @@
 const Product = require('../models/product.model');
 const ProductImgs = require('../models/productImgs.model');
-const ProductInCart = require('../models/productInCart.model');
 const { appSuccess } = require('../utils/appSuccess');
 const { catchAsync } = require('../utils/catchAsync');
 const { storage } = require('../utils/firebase');
 const { mapAsync } = require('../utils/mapAsync');
-const { ref, uploadBytes } = require('firebase/storage');
+const { ref, uploadBytes, getDownloadURL } = require('firebase/storage');
 
-exports.findProduct = catchAsync(async (req, res, next) => {
-  const product = await Product.findAll({
+exports.findProducts = catchAsync(async (req, res, next) => {
+  // 1. Obtener los productos, incluyendo sus imágenes
+  const products = await Product.findAll({
     where: {
       status: true,
     },
+    include: {
+      model: ProductImgs,
+      where: { status: true },
+      required: false,
+    },
   });
-  res.status(200).json({
-    status: 'success',
-    message: 'ROUTE - GET',
-    product,
+
+  // 2. mapAsync anidado, pues debemos recorrer un arreglo que está dentro de otro arreglo
+  await mapAsync(products, async product => {
+    await mapAsync(product.productImgs, async productImg => {
+      const refImg = ref(storage, productImg.imgUrl);
+      const url = await getDownloadURL(refImg);
+      productImg.imgUrl = url;
+    });
   });
+
+  // 3. Respuesta al cliente
+  appSuccess(res, 200, 'Products obtained successfully', { products });
 });
 
 exports.findProductById = catchAsync(async (req, res, next) => {
